@@ -1,4 +1,24 @@
 import os
+import re
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+from nltk.tokenize import word_tokenize
+
+def clean_text(text):
+    # Convert text to lowercase
+    text = text.lower()
+    
+    # Remove punctuation except for periods and commas
+    text = re.sub(r'[^\w\s,.]', '', text)
+    
+    # Replace multiple spaces with a single space
+    text = re.sub(r'\s+', ' ', text)
+    
+    # Remove leading and trailing whitespaces
+    text = text.strip()
+    
+    return text
 
 def load_glove():
     word_2_vec = {}
