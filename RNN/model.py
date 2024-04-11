@@ -1,12 +1,24 @@
 from torch import nn
 
-class ClassificationModel(nn.Module):
-    def __init__(self, num_classes):
-        super(ClassificationModel, self).__init__()
+class QuestionModule(nn.Module):
+    def __init__(self):
+        super(QuestionModule, self).__init__()
+        return
+    
 
-        self.num_classes = num_classes
+class InputModule(nn.Module):
+    def __init__(self):
+        return
+    
 
-        
-
-    def forward(self):
+class MemoryModule(nn.Module):
+    def __init__(self):
+        return
+    
+class AnswerModule(nn.Module):
+    def __init__(self):
+        return
+    
+class DynamicMemoryModule(nn.Module):
+    def __init__(self):
         return
