@@ -34,6 +34,8 @@ processor = DataProcessor(
 train_dataset = processor.process(train_dataset)
 validation_dataset = processor.process(valid_dataset)
 
+print("Checkpoint 1: loading data done")
+
 columns = ["source_ids", "target_ids", "attention_mask"]
 train_dataset.set_format(type="torch", columns=columns)
 validation_dataset.set_format(type='torch', columns=columns)
@@ -52,6 +54,9 @@ data_collator = T2TDataCollator(
 train_dataset = torch.load("dataset/train_dataset.pt")
 validation_dataset = torch.load("dataset/validation_dataset.pt")
 
+print("Checkpoint 2: finish data creation")
+print("Sample format of training data:", train_dataset[0])
+
 args = TrainingArguments(
     "t5-tuned",
     evaluation_strategy="no",
@@ -61,8 +66,6 @@ args = TrainingArguments(
     weight_decay=0.01,
     remove_unused_columns=False,
 )
-
-## Training
 
 trainer = Trainer(
     model=model,
@@ -75,10 +78,12 @@ trainer = Trainer(
 trainer.train()
 trainer.save_model("t5-tuned")
 
+print("Checkpoint 3: finish training")
 
 ## Evaluation
 eval()
 
+print("Checkpoint 4: finish evaluating")
 # results = {}
 
 # logger.info("*** Evaluate ***")
@@ -95,7 +100,9 @@ eval()
 
 ## Get predictions
 from pipelines import pipeline
-
+print("Checkpoint 5: testing")
 model = AutoModelForSeq2SeqLM.from_pretrained("t5-tuned", local_files_only=True)
 tokenizer = AutoTokenizer.from_pretrained("t5-tuned", local_files_only=True)
 nlp = pipeline(model, tokenizer)
+
+print(nlp("../data/text_data.txt"))
