@@ -1,68 +1,101 @@
-import config
+from datasets import load_dataset
+from transformers import AutoTokenizer, AutoModelForQuestionAnswering, AutoModelForSeq2SeqLM
+from transformers import Trainer, TrainingArguments
+from transformers import T5Tokenizer, T5ForConditionalGeneration
+from tqdm.auto import tqdm
+from prepare_data import DataProcessor, T2TDataCollator
+from eval import eval
+
+import config as cfg
+import logging
+import evaluate
 import collections
-import numpy as np
 import torch
-import torch.optim as optim
+import numpy as np
 
-from RNN import model, eval, loss
-from torch.utils.data import DataLoader
-from prepare_data import TextDataset, collater
+logger = logging.getLogger(__name__)
 
-def get_dataset():
-    train_data = TextDataset(config.TRAIN_DIR)
-    dev_data = TextDataset(config.DEV_DIR)
-    return train_data, dev_data
+raw_datasets = load_dataset("squad")
+model_checkpoint = "t5-base"
 
-def train():
-    train_data, dev_data = get_dataset()
-    train_dataloader = DataLoader(train_data, num_workers=3, sampler=None)
+tokenizer = T5Tokenizer.from_pretrained(model_checkpoint)
+tokenizer.add_tokens([cfg.SEP_TOKEN])
+model = T5ForConditionalGeneration.from_pretrained(model_checkpoint)
 
-    rnn = model.ClassificationModel(num_classes=train_data.num_classes())
+train_dataset = load_dataset("squad", split="train")
+valid_dataset = load_dataset("squad", split="validation")
 
-    rnn.training = True
-    
-    optimizer = optim.Adam(rnn.parameters(), lr=1e-5)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3)
-    loss_hist = collections.deque(maxlen=500)
+processor = DataProcessor(
+    tokenizer=tokenizer,
+    max_source_length = cfg.MAX_SOURCE_LENGTH,
+    max_target_length = cfg.MAX_TARGET_LENGTH,
+)
 
-    rnn.train()
+train_dataset = processor.process(train_dataset)
+validation_dataset = processor.process(valid_dataset)
 
-    print('Number of training sentences: {}'.format(len(train_data)))
+columns = ["source_ids", "target_ids", "attention_mask"]
+train_dataset.set_format(type="torch", columns=columns)
+validation_dataset.set_format(type='torch', columns=columns)
 
-    for epoch_num in range(config.EPOCHS):
-        rnn.train()
-        epoch_loss = []
+torch.save(train_dataset, f"{cfg.TRAIN_DATA_PATH}")
+torch.save(validation_dataset, f"{cfg.VALIDATION_DATA_PATH}")
 
-        for iter_num, data in enumerate(train_dataloader):
-            optimizer.zero_grad()
+model = AutoModelForSeq2SeqLM.from_pretrained("t5-base")
+model.resize_token_embeddings(len(tokenizer))
 
-            loss = rnn(data['input'].float(), data['category'])
-            if bool(loss == 0):
-                continue
-            loss.backward()
+data_collator = T2TDataCollator(
+    tokenizer=tokenizer,
+    mode="training",
+)
 
-            torch.nn.utils.clip_grad_norm_(rnn.parameters(), 0.1)
-            optimizer.step()
+train_dataset = torch.load("dataset/train_dataset.pt")
+validation_dataset = torch.load("dataset/validation_dataset.pt")
 
-            loss_hist.append(loss)
-        
-            print(
-                'Epoch: {} | Iteration: {} | Running Loss: {}'.format(
-                    epoch_num, iter_num, np.mean(loss_hist)
-                )
-            )
+args = TrainingArguments(
+    "t5-tuned",
+    evaluation_strategy="no",
+    save_strategy="epoch",
+    learning_rate=2e-5,
+    num_train_epochs=3,
+    weight_decay=0.01,
+    remove_unused_columns=False,
+)
 
-            del loss
-        
-        print("Evaluating dev set")
-        scores = eval.evaluate(dev_data, rnn)
+## Training
+
+trainer = Trainer(
+    model=model,
+    args=args,
+    train_dataset=train_dataset,
+    eval_dataset=validation_dataset,
+    data_collator=data_collator,
+)
+
+trainer.train()
+trainer.save_model("t5-tuned")
 
 
-        scheduler.step(np.mean(epoch_loss))
-    rnn.eval()
+## Evaluation
+eval()
 
+# results = {}
 
-    return
+# logger.info("*** Evaluate ***")
+# eval_output = trainer.evaluate()
 
-if __name__ == "__main__":
-    train()
+# output_eval_file = "results/eval_results.txt"
+
+# with open(output_eval_file, "w") as writer:
+#     logger.info("*** Eval results ***")
+#     for key in sorted(eval_output.keys()):
+#         logger.info("  %s = %s", key, str(eval_output[key]))
+#         writer.write("%s = %s\n" % (key, str(eval_output[key])))
+#     results.update(eval_output)
+
+## Get predictions
+from pipelines import pipeline
+
+model = AutoModelForSeq2SeqLM.from_pretrained("t5-tuned", local_files_only=True)
+tokenizer = AutoTokenizer.from_pretrained("t5-tuned", local_files_only=True)
+nlp = pipeline(model, tokenizer)

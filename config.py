@@ -1,7 +1,11 @@
 EPOCHS = 5
 BATCH_SIZE = 32
 
-TRAIN_DIR = '/data/train.txt'
-DEV_DIR = '/data/dev.txt'
+MAX_SOURCE_LENGTH = 512
+MAX_TARGET_LENGTH = 64
 
-GLOVE_FILE = '/data/glove.6B.50d-relativized.txt'
+SEP_TOKEN = "<sep>"
+STRIDE = 128
+
+TRAIN_DATA_PATH = "dataset/train_dataset.pt"
+VALIDATION_DATA_PATH = "dataset/validation_dataset.pt"
