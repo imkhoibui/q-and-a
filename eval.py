@@ -29,8 +29,8 @@ def get_predictions(model, tokenizer, data_loader, num_beams=4, max_length=32, l
     return predictions
 
 def eval():
-    tokenizer = AutoTokenizer.from_pretrained("t5-tuned")
-    model = AutoModelForSeq2SeqLM.from_pretrained("t5-tuned")
+    tokenizer = AutoTokenizer.from_pretrained("t5-tuned", local_files_only=True)
+    model = AutoModelForSeq2SeqLM.from_pretrained("t5-tuned", local_files_only=True)
 
     valid_dataset = torch.load(cfg.VALIDATION_DATA_PATH)
 

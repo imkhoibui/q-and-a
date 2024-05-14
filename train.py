@@ -22,8 +22,8 @@ tokenizer = T5Tokenizer.from_pretrained(model_checkpoint)
 tokenizer.add_tokens([cfg.SEP_TOKEN])
 model = T5ForConditionalGeneration.from_pretrained(model_checkpoint)
 
-train_dataset = load_dataset("squad", split="train")
-valid_dataset = load_dataset("squad", split="validation")
+train_dataset = load_dataset("squad", split="train[:1000]")
+valid_dataset = load_dataset("squad", split="validation[:1000]")
 
 processor = DataProcessor(
     tokenizer=tokenizer,
@@ -61,6 +61,9 @@ args = TrainingArguments(
     "t5-tuned",
     evaluation_strategy="no",
     save_strategy="epoch",
+    per_device_eval_batch_size=32,
+    per_device_train_batch_size=32,
+    gradient_accumulation_steps=8,
     learning_rate=2e-5,
     num_train_epochs=3,
     weight_decay=0.01,
@@ -77,7 +80,7 @@ trainer = Trainer(
 
 trainer.train()
 trainer.save_model("t5-tuned")
-
+tokenizer.save_pretrained("t5-tuned")
 print("Checkpoint 3: finish training")
 
 ## Evaluation
@@ -105,4 +108,6 @@ model = AutoModelForSeq2SeqLM.from_pretrained("t5-tuned", local_files_only=True)
 tokenizer = AutoTokenizer.from_pretrained("t5-tuned", local_files_only=True)
 nlp = pipeline(model, tokenizer)
 
-print(nlp("../data/text_data.txt"))
+with open("data/text_data.txt", "r") as files:
+    text = files.read()
+print(nlp(text))

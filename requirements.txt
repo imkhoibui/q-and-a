@@ -1,6 +1,8 @@
 numpy
 nltk
-torch
-torchdata
-torchtext
-Flask
+pytorch
+transformers
+transformers[torch]
+evaluate
+datasets=2.15.0
+sentencepiece
