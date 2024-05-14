@@ -25,8 +25,8 @@ tokenizer = T5Tokenizer.from_pretrained(model_checkpoint)
 tokenizer.add_tokens([cfg.SEP_TOKEN])
 model = T5ForConditionalGeneration.from_pretrained(model_checkpoint)
 
-train_dataset = load_dataset("squad", split="train[:10]")
-valid_dataset = load_dataset("squad", split="validation[:10]")
+train_dataset = load_dataset("squad", split="train[:1000]")
+valid_dataset = load_dataset("squad", split="validation[:100]")
 
 processor = DataProcessor(
     tokenizer=tokenizer,
@@ -67,7 +67,7 @@ args = TrainingArguments(
     per_device_eval_batch_size=32,
     per_device_train_batch_size=32,
     gradient_accumulation_steps=8,
-    learning_rate=2e-5,
+    learning_rate=1e-4,
     num_train_epochs=3,
     weight_decay=0.01,
     remove_unused_columns=False,
@@ -90,19 +90,19 @@ print("Checkpoint 3: finish training")
 eval()
 
 print("Checkpoint 4: finish evaluating")
-# results = {}
+results = {}
 
-# logger.info("*** Evaluate ***")
-# eval_output = trainer.evaluate()
+logger.info("*** Evaluate ***")
+eval_output = trainer.evaluate()
 
-# output_eval_file = "results/eval_results.txt"
+output_eval_file = "results/eval_result_metrics.txt"
 
-# with open(output_eval_file, "w") as writer:
-#     logger.info("*** Eval results ***")
-#     for key in sorted(eval_output.keys()):
-#         logger.info("  %s = %s", key, str(eval_output[key]))
-#         writer.write("%s = %s\n" % (key, str(eval_output[key])))
-#     results.update(eval_output)
+with open(output_eval_file, "w") as writer:
+    logger.info("*** Eval results ***")
+    for key in sorted(eval_output.keys()):
+        logger.info("  %s = %s", key, str(eval_output[key]))
+        writer.write("%s = %s\n" % (key, str(eval_output[key])))
+    results.update(eval_output)
 
 ## Get predictions
 from pipelines import pipeline
