@@ -25,8 +25,8 @@ tokenizer = T5Tokenizer.from_pretrained(model_checkpoint)
 tokenizer.add_tokens([cfg.SEP_TOKEN])
 model = T5ForConditionalGeneration.from_pretrained(model_checkpoint)
 
-train_dataset = load_dataset("squad", split="train[:100]")
-valid_dataset = load_dataset("squad", split="validation[:100]")
+train_dataset = load_dataset("squad", split="train[:10]")
+valid_dataset = load_dataset("squad", split="validation[:10]")
 
 processor = DataProcessor(
     tokenizer=tokenizer,
@@ -58,7 +58,7 @@ train_dataset = torch.load("dataset/train_dataset.pt")
 validation_dataset = torch.load("dataset/validation_dataset.pt")
 
 print("Checkpoint 2: finish data creation")
-print("Sample format of training data:", train_dataset[0])
+# print("Sample format of training data:", train_dataset[0])
 
 args = TrainingArguments(
     "t5-tuned",
