@@ -1,34 +1,49 @@
-import os
-import re
-import nltk
-nltk.download('punkt')
-nltk.download('stopwords')
-from nltk.tokenize import word_tokenize
+from typing import Callable, Dict, Iterable, List
+from torch import nn
 
-def clean_text(text):
-    # Convert text to lowercase
-    text = text.lower()
-    
-    # Remove punctuation except for periods and commas
-    text = re.sub(r'[^\w\s,.]', '', text)
-    
-    # Replace multiple spaces with a single space
-    text = re.sub(r'\s+', ' ', text)
-    
-    # Remove leading and trailing whitespaces
-    text = text.strip()
-    
-    return text
+# these functions are taken from transformers repo
+def grad_status(model: nn.Module) -> Iterable:
+    return (par.requires_grad for par in model.parameters())
 
-def load_glove():
-    word_2_vec = {}
+def freeze_params(model: nn.Module):
+    for par in model.parameters():
+        par.requires_grad = False
 
-    print("Loading GloVe")
+def freeze_embeds(model: nn.Module):
+    """Freeze token embeddings and positional embeddings for bart, just token embeddings for t5."""
+    try:
+        freeze_params(model.model.shared)
+        for d in [model.model.encoder, model.model.decoder]:
+            freeze_params(d.embed_positions)
+            freeze_params(d.embed_tokens)
+    except AttributeError:
+        freeze_params(model.shared)
+        for d in [model.encoder, model.decoder]:
+            freeze_params(d.embed_tokens)
 
-    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/glove.6B.50d-relativized.txt")) as file:
-        for line in file:
-            l = line.split()
-            word_2_vec[l[0]] = l[1:]
+def assert_not_all_frozen(model):
+    model_grads: List[bool] = list(grad_status(model))
+    npars = len(model_grads)
+    assert any(model_grads), f"none of {npars} weights require grad"
 
-    print("Finish loading GloVe")
-    return word_2_vec
+def label_smoothed_nll_loss(lprobs, target, epsilon, ignore_index=-100):
+    """From fairseq"""
+    if target.dim() == lprobs.dim() - 1:
+        target = target.unsqueeze(-1)
+    nll_loss = -lprobs.gather(dim=-1, index=target)
+    smooth_loss = -lprobs.sum(dim=-1, keepdim=True)
+    if ignore_index is not None:
+        pad_mask = target.eq(ignore_index)
+        nll_loss.masked_fill_(pad_mask, 0.0)
+        smooth_loss.masked_fill_(pad_mask, 0.0)
+        bs = pad_mask.long().sum()
+    else:
+        nll_loss = nll_loss.squeeze(-1)
+        smooth_loss = smooth_loss.squeeze(-1)
+        bs = lprobs.shape[0]
+
+    nll_loss = nll_loss.sum()  # mean()? Scared to break other math.
+    smooth_loss = smooth_loss.sum()
+    eps_i = epsilon / lprobs.size(-1)
+    loss = (1.0 - epsilon) * nll_loss + eps_i * smooth_loss
+    return loss / bs, nll_loss / bs

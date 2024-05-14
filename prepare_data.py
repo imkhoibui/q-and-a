@@ -2,7 +2,6 @@ import config as cfg
 import torch
 from typing import Dict, List, Optional
 
-
 class DataProcessor():
     def __init__(self, tokenizer, max_source_length, max_target_length):
         self.tokenizer = tokenizer
