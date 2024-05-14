@@ -5,7 +5,7 @@ from nltk import sent_tokenize
 import torch
 
 class E2EQGPipeline:
-    def __init__(self, model, tokenizer, use_cuda):
+    def __init__(self, model, tokenizer, use_cuda=True):
         self.model = model
         self.tokenizer = tokenizer
         self.device = "cuda" if torch.cuda.is_available() and use_cuda else "cpu"
@@ -63,4 +63,4 @@ class E2EQGPipeline:
         return inputs
     
 def pipeline(model, tokenizer):
-    return E2EQGPipeline(model, tokenizer, use_cuda=True)
+    return E2EQGPipeline(model, tokenizer)

@@ -47,7 +47,7 @@ def eval():
         tokenizer=tokenizer,
         data_loader=loader,
         num_beams=4,
-        max_length=64
+        max_length=32,
     )
 
     with open("results/eval_result.txt", 'w') as f:

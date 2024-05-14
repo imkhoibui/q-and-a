@@ -3,7 +3,9 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, AutoModel
 from transformers import Trainer, TrainingArguments
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 from tqdm.auto import tqdm
+
 from prepare_data import DataProcessor, T2TDataCollator
+from trainer import Trainer
 from eval import eval
 
 import config as cfg
@@ -12,6 +14,7 @@ import evaluate
 import collections
 import torch
 import numpy as np
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +25,8 @@ tokenizer = T5Tokenizer.from_pretrained(model_checkpoint)
 tokenizer.add_tokens([cfg.SEP_TOKEN])
 model = T5ForConditionalGeneration.from_pretrained(model_checkpoint)
 
-train_dataset = load_dataset("squad", split="train[:1000]")
-valid_dataset = load_dataset("squad", split="validation[:1000]")
+train_dataset = load_dataset("squad", split="train[:100]")
+valid_dataset = load_dataset("squad", split="validation[:100]")
 
 processor = DataProcessor(
     tokenizer=tokenizer,
@@ -108,6 +111,6 @@ model = AutoModelForSeq2SeqLM.from_pretrained("t5-tuned", local_files_only=True)
 tokenizer = AutoTokenizer.from_pretrained("t5-tuned", local_files_only=True)
 nlp = pipeline(model, tokenizer)
 
-with open("data/text_data.txt", "r") as files:
+with open("data/text_data1.txt", "r") as files:
     text = files.read()
 print(nlp(text))
