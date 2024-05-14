@@ -25,7 +25,7 @@ tokenizer = T5Tokenizer.from_pretrained(model_checkpoint)
 tokenizer.add_tokens([cfg.SEP_TOKEN])
 model = T5ForConditionalGeneration.from_pretrained(model_checkpoint)
 
-train_dataset = load_dataset("squad", split="train[:1000]")
+train_dataset = load_dataset("squad", split="train[:500]")
 valid_dataset = load_dataset("squad", split="validation[:100]")
 
 processor = DataProcessor(

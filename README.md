@@ -38,8 +38,13 @@ token `<sep>`.
 ## Results
 
 We trained with 3 epochs, for the first 1000 examples from squad dataset.
-We then evaluate and received the following results:
 
+We then evaluate and received the following results:
+- `epoch = 3.0`
+- `eval_loss = 5.103535175323486`
+- `eval_runtime = 695.7682`
+- `eval_samples_per_second = 1.437`
+- `eval_steps_per_second = 0.046`
 
 We then tested our model on a short paragraph and get the following results:
 

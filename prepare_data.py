@@ -3,9 +3,14 @@ import torch
 from typing import Dict, List, Optional
 
 def process_e2e_qg(example):
-    source_text = f"generating questions: {example['context'].strip()}"
-    questions = example['question']
-    target_text = " {sep_token} " + questions
+    source_text = f"{example['context'].strip()}"
+    if isinstance(example['question'], str):
+        questions = example['question']
+        target_text = questions + " {sep_token} "
+    else:
+        questions = [one for one in example['question']]
+        target_text = " {sep_token} ".join(questions)
+
     target_text = f"{target_text} {{sep_token}}"
     example['source_text'] = source_text
     example['target_text'] = target_text
@@ -22,6 +27,7 @@ class DataProcessor():
         dataset = dataset.map(process_e2e_qg)
         dataset = dataset.map(self.add_eos_to_example)
         dataset = dataset.map(self.add_special_tokens)
+        print("Sample dataset:", dataset[0])
         dataset = dataset.map(self.convert_to_features, batched=True)
         return dataset 
     
