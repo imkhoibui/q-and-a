@@ -2,6 +2,15 @@ import config as cfg
 import torch
 from typing import Dict, List, Optional
 
+def process_e2e_qg(example):
+    source_text = f"generating questions: {example['context'].strip()}"
+    questions = example['question']
+    target_text = " {sep_token} " + questions
+    target_text = f"{target_text} {{sep_token}}"
+    example['source_text'] = source_text
+    example['target_text'] = target_text
+    return example
+
 class DataProcessor():
     def __init__(self, tokenizer, max_source_length, max_target_length):
         self.tokenizer = tokenizer
@@ -10,18 +19,11 @@ class DataProcessor():
         self.sep_token = cfg.SEP_TOKEN
 
     def process(self, dataset):
-        dataset = dataset.map(self.process_e2e_qg)
+        dataset = dataset.map(process_e2e_qg)
         dataset = dataset.map(self.add_eos_to_example)
         dataset = dataset.map(self.add_special_tokens)
         dataset = dataset.map(self.convert_to_features, batched=True)
         return dataset 
-    
-    def process_e2e_qg(self, example):
-        source_text = f"generating questions: {example['context'].strip()}"
-        questions = [question.strip() for question in example['question']]
-        target_text = " {sep_token} ".join(questions)
-        target_text = f"{target_text} {{sep_token}}"
-        return {"source_text" : source_text, "target_text" : target_text}
     
     def add_eos_to_example(self, example):
         example["source_text"] = example["source_text"] + "</s>"
@@ -54,7 +56,6 @@ class DataProcessor():
         }
 
         return encodings
-
 
 class T2TDataCollator():
     def __init__(self, tokenizer, model_type="t5", mode="training", using_tpu=False):

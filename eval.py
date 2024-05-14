@@ -9,15 +9,15 @@ from tqdm.auto import tqdm
 device = 'cuda' if torch.cuda.is_available else 'cpu'
 
 def get_predictions(model, tokenizer, data_loader, num_beams=4, max_length=32, length_penalty=1):
-    model.to(device)
+    # model.to(device)
     
     predictions = []
     model.eval()
     with torch.no_grad():
         for batch in tqdm(data_loader):
             outs = model.generate(
-                input_ids=batch['input_ids'].to(device), 
-                attention_mask=batch['attention_mask'].to(device),
+                input_ids=batch['input_ids'], 
+                attention_mask=batch['attention_mask'],
                 num_beams=num_beams,
                 max_length=max_length,
                 length_penalty=length_penalty,
