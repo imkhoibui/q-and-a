@@ -1,4 +1,4 @@
-# Project Overview
+# Project Overview - t5 end-to-end question generation
 
 This is a repo for my course CS312 - Natural Language Processing.
 Objective: a fine-tuned model to perform question generation task given a text.
