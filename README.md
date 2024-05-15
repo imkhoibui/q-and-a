@@ -6,7 +6,7 @@ Objective: a fine-tuned model to perform a question-generation task given a text
 ## Introduction
 
 - The model chosen is Google's [t5-base](https://huggingface.co/docs/transformers/model_doc/t5)
-fine-tuned on [SQuAD's 1.1 dataset](https://rajpurkar.github.io/SQuAD-explorer/). The model is
+fine-tuned on [SQuAD's 1.1 dataset](https://rajpurkar.github.io/SQuAD-explorer/).
 
 - Thanks to its efficient pre-training capabilities, the t5-base (Text-to-Text Transfer Transformer)
 proved a prominent model in various text-to-text tasks.
