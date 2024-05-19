@@ -51,6 +51,10 @@ def eval():
     )
 
     with open("results/eval_result.txt", 'w') as f:
-        f.write("\n".join(predictions))
+        for prediction in predictions:
+            f.write("\n".join(prediction))
     
     logging.info(f"Output saved at results/eval_results.txt")
+
+if __name__ == "__main__":
+    eval()

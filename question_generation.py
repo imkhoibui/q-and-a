@@ -3,18 +3,13 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, AutoModel
 from transformers import Trainer, TrainingArguments
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 from tqdm.auto import tqdm
-
 from prepare_data import DataProcessor, T2TDataCollator
 from trainer import Trainer
 from eval import eval
-
+from pipelines import pipeline
 import config as cfg
 import logging
-import evaluate
-import collections
 import torch
-import numpy as np
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +20,8 @@ tokenizer = T5Tokenizer.from_pretrained(model_checkpoint)
 tokenizer.add_tokens([cfg.SEP_TOKEN])
 model = T5ForConditionalGeneration.from_pretrained(model_checkpoint)
 
-train_dataset = load_dataset("squad", split="train[:500]")
-valid_dataset = load_dataset("squad", split="validation[:100]")
+train_dataset = load_dataset("squad", split="train[:50000]")
+valid_dataset = load_dataset("squad", split="validation[:2500]")
 
 processor = DataProcessor(
     tokenizer=tokenizer,
@@ -64,8 +59,8 @@ args = TrainingArguments(
     "t5-tuned",
     evaluation_strategy="no",
     save_strategy="epoch",
-    per_device_eval_batch_size=32,
-    per_device_train_batch_size=32,
+    per_device_eval_batch_size=cfg.BATCH_SIZE,
+    per_device_train_batch_size=cfg.BATCH_SIZE,
     gradient_accumulation_steps=8,
     learning_rate=1e-4,
     num_train_epochs=3,
@@ -86,9 +81,7 @@ trainer.save_model("t5-tuned")
 tokenizer.save_pretrained("t5-tuned")
 print("Checkpoint 3: finish training")
 
-## Evaluation
 eval()
-
 print("Checkpoint 4: finish evaluating")
 results = {}
 
@@ -100,12 +93,10 @@ output_eval_file = "results/eval_result_metrics.txt"
 with open(output_eval_file, "w") as writer:
     logger.info("*** Eval results ***")
     for key in sorted(eval_output.keys()):
-        logger.info("  %s = %s", key, str(eval_output[key]))
+        logger.info("%s = %s", key, str(eval_output[key]))
         writer.write("%s = %s\n" % (key, str(eval_output[key])))
     results.update(eval_output)
 
-## Get predictions
-from pipelines import pipeline
 print("Checkpoint 5: testing")
 model = AutoModelForSeq2SeqLM.from_pretrained("t5-tuned", local_files_only=True)
 tokenizer = AutoTokenizer.from_pretrained("t5-tuned", local_files_only=True)
