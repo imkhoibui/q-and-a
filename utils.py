@@ -1,7 +1,6 @@
 from typing import Callable, Dict, Iterable, List
 from torch import nn
 
-# these functions are taken from transformers repo
 def grad_status(model: nn.Module) -> Iterable:
     return (par.requires_grad for par in model.parameters())
 
@@ -10,7 +9,6 @@ def freeze_params(model: nn.Module):
         par.requires_grad = False
 
 def freeze_embeds(model: nn.Module):
-    """Freeze token embeddings and positional embeddings for bart, just token embeddings for t5."""
     try:
         freeze_params(model.model.shared)
         for d in [model.model.encoder, model.model.decoder]:
@@ -27,7 +25,6 @@ def assert_not_all_frozen(model):
     assert any(model_grads), f"none of {npars} weights require grad"
 
 def label_smoothed_nll_loss(lprobs, target, epsilon, ignore_index=-100):
-    """From fairseq"""
     if target.dim() == lprobs.dim() - 1:
         target = target.unsqueeze(-1)
     nll_loss = -lprobs.gather(dim=-1, index=target)
@@ -42,7 +39,7 @@ def label_smoothed_nll_loss(lprobs, target, epsilon, ignore_index=-100):
         smooth_loss = smooth_loss.squeeze(-1)
         bs = lprobs.shape[0]
 
-    nll_loss = nll_loss.sum()  # mean()? Scared to break other math.
+    nll_loss = nll_loss.sum()
     smooth_loss = smooth_loss.sum()
     eps_i = epsilon / lprobs.size(-1)
     loss = (1.0 - epsilon) * nll_loss + eps_i * smooth_loss
