@@ -51,7 +51,17 @@ We then evaluated and received the following results:
 - `eval_samples_per_second = 1.437`
 - `eval_steps_per_second = 0.046`
 
-Future work should attempt to train the model with much more extensive data from the dataset to generate results.
+We then tested our model on a short paragraph and got the following results:
+
+Input: 
+
+`An artificial neural network is made of connected units or nodes called artificial neurons, which loosely model the neurons in a brain. These are connected by edges, which model the synapses in a brain. An artificial neuron receives signals from connected neurons, then processes them and sends a signal to other connected neurons. The "signal" is a real number, and the output of each neuron is computed by some non-linear function of the sum of its inputs, called the activation function. Neurons and edges typically have a weight that adjusts as learning proceeds. The weight increases or decreases the strength of the signal at a connection.`
+
+Output:
+
+`What is the weight of the signal at a connection?`
+
+Future work should attempt to train the model with more extensive data from the dataset to generate results.
 
 ## References
 Lopez, Luis Enrico, et al. "Transformer-based end-to-end question generation." arXiv preprint arXiv:2005.01107 4 (2020).
